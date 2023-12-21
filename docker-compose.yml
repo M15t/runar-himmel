@@ -1,0 +1,39 @@
+version: "3"
+services:
+  #* EnableMySQL: replace the `db` service with the one below
+  db:
+    build:
+      context: ./docker/db
+      dockerfile: Dockerfile.mysql
+    container_name: runar-himmel-mysql-db
+    ports:
+      - "3306:3306"
+    environment:
+      # for root user. other users are created in provision script
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: maindb
+      TZ: UTC
+    volumes:
+      - db-data:/var/lib/mysql
+  #* EnablePostgreSQL: replace the `db` service with the one below
+  # db:
+  #   build:
+  #     context: ./docker/db
+  #     # change to `Dockerfile.postgis` when working with location data
+  #     dockerfile: Dockerfile.postgres
+  #   container_name: runar-himmel-postgresql-db
+  #   ports:
+  #     - "${DB_PORT:-5432}:5432"
+  #   environment:
+  #     POSTGRES_DB: ${DB_DATABASE:-maindb}
+  #     # Superuser creds, should be used by DBA only
+  #     # Application users are created in provision script
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: postgres
+  #     TZ: UTC
+  #     PGTZ: UTC
+  #   volumes:
+  #     - db-data:/var/lib/postgresql/data
+
+volumes:
+  db-data:

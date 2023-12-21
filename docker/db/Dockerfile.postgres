@@ -1,0 +1,3 @@
+FROM postgres:13-alpine
+
+COPY ./provision.pg.sql /docker-entrypoint-initdb.d/provision.sql
