@@ -121,7 +121,7 @@ func Run() (respErr error) {
 						PhoneVerifiedAt: &now,
 						FirstName:       "Loki",
 						LastName:        "Laufeyjarson",
-						Role:            rbac.RoleCustomer,
+						Role:            rbac.RoleUser,
 					},
 				}
 				for _, usr := range defaultUsers {
@@ -138,6 +138,19 @@ func Run() (respErr error) {
 			},
 			Rollback: func(tx *gorm.DB) error {
 				return tx.Migrator().DropTable("users")
+			},
+		},
+		// create "sessions" table
+		{
+			ID: "202312211623",
+			Migrate: func(tx *gorm.DB) error {
+				if err := tx.Set("gorm:table_options", defaultTableOpts).AutoMigrate(&types.Session{}); err != nil {
+					return err
+				}
+				return nil
+			},
+			Rollback: func(tx *gorm.DB) error {
+				return tx.Migrator().DropTable("sessions")
 			},
 		},
 	})

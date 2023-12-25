@@ -2,8 +2,9 @@ package main
 
 import (
 	"embed"
-	"fmt"
 	"runar-himmel/config"
+	"runar-himmel/internal/api/admin/session"
+	"runar-himmel/internal/api/admin/user"
 	"runar-himmel/internal/api/auth"
 	"runar-himmel/internal/api/root"
 	"runar-himmel/internal/db"
@@ -14,6 +15,8 @@ import (
 	"runar-himmel/pkg/server/middleware/jwt"
 	"runar-himmel/pkg/server/middleware/secure"
 	"runar-himmel/pkg/util/crypter"
+
+	contextutil "runar-himmel/internal/api/context"
 
 	"github.com/labstack/echo/v4"
 )
@@ -38,8 +41,6 @@ func main() {
 	checkErr(err)
 	defer sqldb.Close()
 
-	fmt.Println(db)
-
 	// Initialize HTTP server
 	e := server.New(&server.Config{
 		Port:              cfg.Server.Port,
@@ -49,9 +50,6 @@ func main() {
 		AllowOrigins:      cfg.Server.AllowOrigins,
 		Debug:             cfg.General.Debug,
 	})
-
-	// custom api context
-	// e.Use(api.ContextMiddleware())
 
 	if enableSwagger {
 		// Static page for SwaggerUI
@@ -64,33 +62,21 @@ func main() {
 	rbacSvc := rbac.New(cfg.General.Debug)
 	jwtSvc := jwt.New(cfg.JWT.Algorithm, cfg.JWT.Secret, cfg.JWT.DurationAccessToken, cfg.JWT.DurationRefreshToken)
 
-	fmt.Println(crypterSvc, rbacSvc, jwtSvc, repoSvc)
-
 	// Initialize services
 	authSvc := auth.New(repoSvc, jwtSvc, crypterSvc)
+	sessionSvc := session.New(repoSvc, rbacSvc)
+	userSvc := user.New(repoSvc, rbacSvc, crypterSvc)
 
 	// Initialize root API
 	root.NewHTTP(e)
 
 	auth.NewHTTP(authSvc, e.Group("/auth"))
 
-	// ctx := context.Context(context.Background())
-	// newUser := &types.User{
-	// 	FirstName: "Runar",
-	// 	LastName:  "Himmel",
-	// 	Email:     "rn@runar.sky",
-	// }
-
-	// rec := &types.User{}
-	// if err := repoSvc.User.GDB.Take(rec, `email = ?`, `loki@runar-himmel.sky`).Error; err != nil {
-	// 	fmt.Println("====== err", err)
-	// }
-
-	// if err := repoSvc.User.Read(ctx, rec, `email = ?`, `loki@runar-himmel.sky`); err != nil {
-	// 	fmt.Println("====== err", err)
-	// }
-
-	// fmt.Println("====== result", rec)
+	// Initialize admin APIs
+	adminRouter := e.Group("/admin")
+	adminRouter.Use(jwtSvc.MWFunc(), contextutil.MWContext())
+	session.NewHTTP(sessionSvc, adminRouter.Group("/sessions"))
+	user.NewHTTP(userSvc, adminRouter.Group("/users"))
 
 	server.Start(e, config.IsLambda())
 }

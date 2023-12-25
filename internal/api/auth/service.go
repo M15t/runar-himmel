@@ -25,8 +25,8 @@ type Auth struct {
 
 // JWT represents token generator (jwt) interface
 type JWT interface {
-	GenerateToken(input *jwt.TokenInput, output *jwt.TokenOutput) error
-	ParseToken(input string) (*gjwt.Token, error)
+	GenerateToken(*jwt.TokenInput, *jwt.TokenOutput) error
+	ParseToken(string) (*gjwt.Token, error)
 }
 
 // Crypter represents security interface

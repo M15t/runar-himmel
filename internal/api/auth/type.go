@@ -1,11 +1,13 @@
 package auth
 
+import "runar-himmel/internal/types"
+
 // Credentials represents login request data
 // swagger:model
 type Credentials struct {
-	// example: frigg@runar-himmel.sky
+	// example: loki@runar-himmel.sky
 	Email string `json:"email" form:"email" validate:"required_without=Username"`
-	// example: frig123!@#
+	// example: customer123!@#
 	Password string `json:"password" form:"password" validate:"required"`
 
 	// This is for SwaggerUI authentication which only support `username` field
@@ -19,4 +21,10 @@ type Credentials struct {
 // swagger:model
 type RefreshTokenData struct {
 	RefreshToken string `json:"refresh_token" validate:"required"`
+}
+
+// AuthenticateInput represents internal authenticate data
+type AuthenticateInput struct {
+	User    *types.User
+	IsLogin bool
 }

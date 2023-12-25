@@ -13,42 +13,40 @@ func (r *Repo[T]) quoteCol(name string) string {
 	return b.String()
 }
 
-// AddFilter adds filter condition
-func (lqc *ListQueryCondition) AddFilter(conds ...any) *ListQueryCondition {
-	lqc.Filter = append(lqc.Filter, conds)
-	return lqc
-}
-
 // parseConds returns standard [sqlString, vars] format for query, powered by gowhere package (with default config)
 func parseConds(conds []any) []any {
 	if len(conds) == 1 {
-		var plan *gowhere.Plan
 		switch c := conds[0].(type) {
 		case string:
 			if len(c) == 0 {
 				return []any{}
 			}
-			// better safe than sorry
-			return []any{"/* WARNING: SQL Injection vulnerability! */ id = ?", c}
+			// Using parameterized query for string condition to prevent SQL injection
+			return []any{"id = ?", c}
 		case map[string]any:
 			if len(c) == 0 {
 				return []any{}
 			}
-			//? this eliminates gorm's ability to query using map...
-			plan = gowhere.Where(c)
+			// Check if the map contains non-simple conditions (e.g., gowhere operators)
+			if hasNonSimpleConditions(c) {
+				// Use gowhere for complex conditions
+				plan := gowhere.Where(c)
+				return append([]any{plan.SQL()}, plan.Vars()...)
+			}
+			// Use simple equality conditions for Gorm
+			return mapToGormConditions(c)
 		case []any:
 			if len(c) == 0 {
 				return []any{}
 			}
-			plan = gowhere.Where(c)
+			// Use gowhere for slice conditions
+			plan := gowhere.Where(c)
+			return append([]any{plan.SQL()}, plan.Vars()...)
 		case *gowhere.Plan:
-			plan = c
+			// Use gowhere plan directly
+			return append([]any{c.SQL()}, c.Vars()...)
 		case nil:
 			return []any{}
-		}
-
-		if plan != nil {
-			return append([]any{plan.SQL()}, plan.Vars()...)
 		}
 	}
 	return conds
@@ -87,7 +85,7 @@ func parseSortParam(s string) [][]string {
 	return l
 }
 
-// A util function to set pagination conditions
+// An util function to set pagination conditions
 func withPaging(db *gorm.DB, page, perPage int) *gorm.DB {
 	if perPage > 0 {
 		db = db.Limit(perPage)
@@ -98,7 +96,7 @@ func withPaging(db *gorm.DB, page, perPage int) *gorm.DB {
 	return db
 }
 
-// A util function to set sorting conditions
+// An util function to set sorting conditions
 // WARNING: SQL Injection vulnerability! `quoteCol` function must take care of quoting column name properly
 func withSorting(db *gorm.DB, sort string, quoteCol func(name string) string) *gorm.DB {
 	if sort != "" {
@@ -112,4 +110,32 @@ func withSorting(db *gorm.DB, sort string, quoteCol func(name string) string) *g
 		db = db.Order(strings.Join(values, ", "))
 	}
 	return db
+}
+
+// hasNonSimpleConditions checks if a map contains non-simple conditions (e.g., gowhere operators).
+func hasNonSimpleConditions(m map[string]any) bool {
+	for _, v := range m {
+		switch v := v.(type) {
+		case map[string]any:
+			// Check if the value is a nested map
+			if hasNonSimpleConditions(v) {
+				return true
+			}
+		default:
+			// Check if the value can be processed by gowhere.Where
+			if gowhere.Where(v) != nil {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// mapToGormConditions converts a map with simple equality conditions to Gorm conditions.
+func mapToGormConditions(m map[string]any) []any {
+	conds := make([]any, 0, len(m)*2)
+	for k, v := range m {
+		conds = append(conds, k+" = ?", v)
+	}
+	return conds
 }

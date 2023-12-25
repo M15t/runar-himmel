@@ -8,7 +8,7 @@ import (
 
 // NewHTTP attaches handlers to Echo router
 func NewHTTP(e *echo.Echo) {
-	// swagger:operation GET / root appHealthcheck
+	// swagger:ignore GET / root appHealthcheck
 	// ---
 	// summary: Healthcheck
 	// responses:

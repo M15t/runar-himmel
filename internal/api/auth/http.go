@@ -28,12 +28,12 @@ func NewHTTP(svc Service, eg *echo.Group) {
 
 	// swagger:operation POST /auth/login auth authLogin
 	// ---
-	// summary: Logs in user by email and password
+	// summary: Logs in user by email, password and grant_type
 	// security: []
 	// parameters:
 	// - name: request
 	//   in: body
-	//   description: Request body
+	//   description: Request body. `grant_type` should be `app` or `portal`
 	//   required: true
 	//   schema:
 	//     "$ref": "#/definitions/Credentials"

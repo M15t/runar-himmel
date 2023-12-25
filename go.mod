@@ -1,6 +1,6 @@
 module runar-himmel
 
-go 1.21.4
+go 1.21.5
 
 require (
 	ariga.io/atlas-provider-gorm v0.2.0
