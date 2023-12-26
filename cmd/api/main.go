@@ -1,7 +1,6 @@
 package main
 
 import (
-	"embed"
 	"runar-himmel/config"
 	"runar-himmel/internal/api/admin/session"
 	"runar-himmel/internal/api/admin/user"
@@ -13,18 +12,33 @@ import (
 
 	"runar-himmel/pkg/server"
 	"runar-himmel/pkg/server/middleware/jwt"
-	"runar-himmel/pkg/server/middleware/secure"
 	"runar-himmel/pkg/util/crypter"
 
 	contextutil "runar-himmel/internal/api/context"
 
-	"github.com/labstack/echo/v4"
+	_ "runar-himmel/cmd/api/docs" // Swagger docs
+
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
+
+//	@title			Swagger Example API
+//	@version		1.0
+//	@description	This is a sample server Runar Himmel server.
+//	@termsOfService	http://swagger.io/terms/
+
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
+
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+//	@host		localhost:8081
+//	@BasePath	/v1
 
 // To embed SwaggerUI into api server using go:build tag
 var (
-	enableSwagger = false
-	swaggerui     embed.FS
+	enableSwagger = true
 )
 
 func checkErr(err error) {
@@ -52,8 +66,11 @@ func main() {
 	})
 
 	if enableSwagger {
-		// Static page for SwaggerUI
-		e.GET("/swagger-ui*", echo.StaticDirectoryHandler(echo.MustSubFS(swaggerui, "swagger-ui"), false), secure.DisableCache())
+		// Static page for SwaggerUI (go-swagger)
+		// e.GET("/swagger-ui*", echo.StaticDirectoryHandler(echo.MustSubFS(swaggerui, "swagger-ui"), false), secure.DisableCache())
+
+		// Static page for SwaggerUI (swaggo)
+		e.GET("/swagger/*", echoSwagger.WrapHandler)
 	}
 
 	// Initialize core services

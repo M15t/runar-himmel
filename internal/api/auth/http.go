@@ -26,48 +26,28 @@ type Service interface {
 func NewHTTP(svc Service, eg *echo.Group) {
 	h := HTTP{svc: svc}
 
-	// swagger:operation POST /auth/login auth authLogin
-	// ---
-	// summary: Logs in user by email, password and grant_type
-	// security: []
-	// parameters:
-	// - name: request
-	//   in: body
-	//   description: Request body. `grant_type` should be `app` or `portal`
-	//   required: true
-	//   schema:
-	//     "$ref": "#/definitions/Credentials"
-	// responses:
-	//   "200":
-	//     description: Access token
-	//     schema:
-	//       "$ref": "#/definitions/AuthToken"
-	//   default:
-	//     description: 'Possible errors: 400, 401, 500'
-	//     schema:
-	//       "$ref": "#/definitions/ErrorResponse"
+	// @Summary Logs in user by email, password and grant_type
+	// @Description Request body. `grant_type` should be `app` or `portal`
+	// @Accept  json
+	// @Produce  json
+	// @Param   request	 body    Credentials     true        "Request body"
+	// @Success 200 {object} AuthToken
+	// @Failure 400 {object} server.ErrorResponse
+	// @Failure 401 {object} server.ErrorResponse
+	// @Failure 500 {object} server.ErrorResponse
+	// @Router /auth/login [post]
 	eg.POST("/login", h.login)
 
-	// swagger:operation POST /auth/refresh-token auth authRefreshToken
-	// ---
-	// summary: Refresh access token
-	// security: []
-	// parameters:
-	// - name: token
-	//   in: body
-	//   description: The given `refresh_token` when login
-	//   required: true
-	//   schema:
-	//     "$ref": "#/definitions/RefreshTokenData"
-	// responses:
-	//   "200":
-	//     description: New access token
-	//     schema:
-	//       "$ref": "#/definitions/AuthToken"
-	//   default:
-	//     description: 'Possible errors: 400, 401,500'
-	//     schema:
-	//       "$ref": "#/definitions/ErrorResponse"
+	// @Summary Refresh access token
+	// @Description Request body
+	// @Accept  json
+	// @Produce  json
+	// @Param   request	 body    RefreshTokenData     true        "Request body"
+	// @Success 200 {object} AuthToken
+	// @Failure 400 {object} server.ErrorResponse
+	// @Failure 401 {object} server.ErrorResponse
+	// @Failure 500 {object} server.ErrorResponse
+	// @Router /auth/refresh-token [post]
 	eg.POST("/refresh-token", h.refreshToken)
 }
 

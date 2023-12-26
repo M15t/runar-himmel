@@ -48,6 +48,9 @@ clean: ## Clean up the built & test files
 specs: ## Generate swagger specs
 	SWAGGER=$(SWAGGER) scripts/specs-gen.sh
 
+specs.s: ## Generate swagger specs for swaggo
+	SWAGGER=$(SWAGGER) scripts/specs-gen-swaggo.sh
+
 build.api: ## Build the api services
 	scripts/build-api.sh
 
